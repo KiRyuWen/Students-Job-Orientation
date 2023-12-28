@@ -30,6 +30,15 @@ for link in intern_elements:
         except:
             continue
         #We don't want
+# first, get 'desired text from element'
+# second, how much information we want
+        # date, title_text, link(/#/news/number)
+# third, insert into database
+# fourth, get information from database
+# fifth, process information to add tags(major, What grade at least, etc.)
+# sixth, display on website
+
+
 for e in NTUST_Intern:
     print(e)
 
