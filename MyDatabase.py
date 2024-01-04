@@ -17,13 +17,38 @@ def Insert_2_database_from_scrapper(datas):
         conn = pymysql.connect(**db_settings)
 
         with conn.cursor() as cursor:
-            sql = "INSERT INTO info(date,title,link,tag) VALUES (%s,%s,%s,%s)"#command
-            cursor.executemany(sql, datas)#insert
-            conn.commit()#save
-
-        conn.close()
+            sql = "INSERT INTO info(date,title,link,tag,school) VALUES (%s,%s,%s,%s,%s)"#command
+            try:
+                cursor.executemany(sql, datas)#insert
+                conn.commit()#save
+            except pymysql.err.IntegrityError as dup_key_error:
+                print("\nsame key bros",dup_key_error)
+                print()
+            except Exception as ex:
+                print(ex)
+            finally:
+                conn.close()
     except Exception as ex:
         print(ex)
+
+def Insert_header_date(data):
+    try:
+        conn = pymysql.connect(**db_settings)
+
+        with conn.cursor() as cursor:
+            sql = "INSERT INTO date_time(date) VALUES (%s)"#command
+            try:
+                cursor.execute(sql, data)#insert
+                conn.commit()#save
+            except pymysql.err.IntegrityError as dup_key_error:
+                raise dup_key_error
+            except Exception as ex:
+                raise ex
+            finally:
+                conn.close()
+    except Exception as ex:
+        raise ex
+
 
 def Get_data_from_database():
     try:
