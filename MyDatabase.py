@@ -87,7 +87,7 @@ def Drop_all_database():
     except Exception as ex:
         print(ex)
 
-def Delete_data_from_database():
+def Delete_data_from_info_database():
     try:
         conn = pymysql.connect(**db_settings)
         with conn.cursor() as cursor:
@@ -98,3 +98,13 @@ def Delete_data_from_database():
     except Exception as ex:
         print(ex)
 
+def Delete_data_date_time_database():
+    try:
+        conn = pymysql.connect(**db_settings)
+        with conn.cursor() as cursor:
+            sql = "DELETE FROM date_time"
+            cursor.execute(sql)
+            conn.commit()
+        conn.close()
+    except Exception as ex:
+        print(ex)
