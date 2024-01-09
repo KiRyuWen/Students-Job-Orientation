@@ -169,6 +169,7 @@ def Scrapper_NTUST_First():
 
 # execution code
 #MyScrapper_NTUST()
+#Insert_2_database_from_scrapper_one_by_one(NTUST_Intern)
 #Delete_data_from_info_database()
 #Delete_data_date_time_database()
-Scrapper_NTUST_First()
+#Scrapper_NTUST_First()

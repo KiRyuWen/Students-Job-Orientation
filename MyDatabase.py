@@ -31,6 +31,33 @@ def Insert_2_database_from_scrapper(datas):
     except Exception as ex:
         print(ex)
 
+def Insert_2_database_from_scrapper_one_by_one(datas):
+    try:
+        conn = pymysql.connect(**db_settings)
+
+        with conn.cursor() as cursor:
+            sql = "INSERT INTO info(date,title,link,tag,school) VALUES (%s,%s,%s,%s,%s)"#command
+            try:
+                for data in datas:
+                    try:
+                        cursor.execute(sql, data)#insert
+                    except pymysql.err.IntegrityError as dup_key_error: # find error 
+                        break
+                    except Exception as ex:
+                        raise ex
+
+                conn.commit()#save
+            except pymysql.err.IntegrityError as dup_key_error:
+                print("\nsame key bros",dup_key_error)
+                print()
+            except Exception as ex:
+                print(ex)
+            finally:
+                conn.close()
+    except Exception as ex: # connection error?
+        print(ex)
+
+
 def Insert_header_date(data):
     try:
         conn = pymysql.connect(**db_settings)
