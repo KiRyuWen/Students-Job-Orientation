@@ -12,7 +12,7 @@ db_settings = {
     "db": "myspyder_info",
     "charset": "big5"
 }
-def Insert_2_database_from_scrapper(datas):
+def insertToDatabase(datas):
     try:
         conn = pymysql.connect(**db_settings)
 
@@ -31,7 +31,7 @@ def Insert_2_database_from_scrapper(datas):
     except Exception as ex:
         print(ex)
 
-def Insert_2_database_from_scrapper_one_by_one(datas):
+def insertToDatabaseByForLoop(datas):
     try:
         conn = pymysql.connect(**db_settings)
 
@@ -58,7 +58,7 @@ def Insert_2_database_from_scrapper_one_by_one(datas):
         print(ex)
 
 
-def Insert_header_date(data):
+def insertHeaderDateToDatabase(data):
     try:
         conn = pymysql.connect(**db_settings)
 
@@ -77,9 +77,17 @@ def Insert_header_date(data):
         raise ex
 
 
-def Get_data_from_database():
+def getDataFromDatabase():
     try:
-        conn = pymysql.connect(**db_settings)
+        #https://stackoverflow.com/questions/7483363/python-mysqldb-returns-datetime-date-and-decimal
+        #god is good saves me. lol
+        #the following is came from stackoverflow
+        conv = pymysql.converters.conversions.copy() 
+        conv[246] = float
+        conv[10] = str
+
+        conn = pymysql.connect(**db_settings,conv = conv)
+        
         with conn.cursor() as cursor:
             sql = "SELECT * FROM info"
             cursor.execute(sql)
@@ -90,20 +98,7 @@ def Get_data_from_database():
         pass
     return None
 
-def Display_data_from_database():
-    try:
-        conn = pymysql.connect(**db_settings)
-        with conn.cursor() as cursor:
-            sql = "SELECT * FROM info"
-            cursor.execute(sql)
-            result = cursor.fetchall()
-            print(len(result))
-            print(result)
-        conn.close()
-    except Exception as ex:
-        print(ex)
-
-def Drop_all_database():
+def dropAllDataFromInfoDatabase():
     try:
         conn = pymysql.connect(**db_settings)
         with conn.cursor() as cursor:
@@ -114,22 +109,11 @@ def Drop_all_database():
     except Exception as ex:
         print(ex)
 
-def Delete_data_from_info_database():
+def deleteDataFromSpecificDatabase(database_name):
     try:
         conn = pymysql.connect(**db_settings)
         with conn.cursor() as cursor:
-            sql = "DELETE FROM info"
-            cursor.execute(sql)
-            conn.commit()
-        conn.close()
-    except Exception as ex:
-        print(ex)
-
-def Delete_data_date_time_database():
-    try:
-        conn = pymysql.connect(**db_settings)
-        with conn.cursor() as cursor:
-            sql = "DELETE FROM date_time"
+            sql = "DELETE FROM " + database_name
             cursor.execute(sql)
             conn.commit()
         conn.close()

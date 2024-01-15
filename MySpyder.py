@@ -56,7 +56,7 @@ def NTUST_Target_Element(driver,target_list):
 
     
 
-def MyScrapper_NTUST():
+def myScrapper_NTUST():
     
     target_url = 'https://career.ntust.edu.tw/#/news'
     try:
@@ -84,7 +84,7 @@ def MyScrapper_NTUST():
 import requests # to get header
 from MyDatabase import *
 import datetime
-def request_header_date(url):
+def requstHeaderDataByURL(url):
     response = requests.get(url) # to specific get result
     header_date = response.headers["Date"] # date value will be "Thu, 04 Jan 2024 13:02:12 GMT"
     # however, we need to convert it to "2024-01-04 13:02:12" for database
@@ -109,7 +109,7 @@ def request_header_date(url):
         raise Exception("data is not updated yet")
 
 
-def Scrapper_NTUST_First():
+def myScrapperNTUSTGetAllData():
     All_intern = []
 
     # loop all pages to get all intern info
@@ -166,10 +166,3 @@ def Scrapper_NTUST_First():
     All_intern = list(set(All_intern))
     Insert_2_database_from_scrapper(All_intern)
 
-
-# execution code
-#MyScrapper_NTUST()
-#Insert_2_database_from_scrapper_one_by_one(NTUST_Intern)
-#Delete_data_from_info_database()
-#Delete_data_date_time_database()
-#Scrapper_NTUST_First()

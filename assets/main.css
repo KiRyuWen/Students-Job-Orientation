@@ -1,0 +1,28 @@
+div.container{
+    width: 70%;
+    background-color: aquamarine;
+    position: relative;
+    float: left;
+    /* background-color: rgb(20, 120, 13); */
+}
+div.date{
+    float: left;
+    width: 200px;
+    position: relative;
+}
+div.title{
+    float: left;
+    width: 700px;
+    /* white-space: nowrap; */
+    position: relative;
+    
+    /* text wrap and ellipsis: https://www.astralweb.com.tw/css-ellipsis/ */
+    text-overflow: ellipsis; 
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+div.tag{
+    float: left;
+    position: relative;
+}
