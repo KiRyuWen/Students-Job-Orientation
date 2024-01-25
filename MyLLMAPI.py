@@ -1,31 +1,38 @@
 from claude_api import Client
 class MyLLMAPI:
-    def __init__(self,cookie_path,uuid_path):
+    def __init__(self,file_folder:str):
         self.error_message = ''
         self.cookie = ''
-        self.uuid = ''
+        self.uuid_title = ''
+        self.uuid_conclusion=''
 
-        self.readCookie(cookie_path)
-        self.readUUID(uuid_path)
+        self.readCookie(file_folder)
+        self.readUUID(file_folder)
+
         self.client = Client(self.cookie)
     def readCookie(self, file_path:str) -> None:
-        with open(file_path, 'r') as f:
+        with open(file_path + 'claude-ai-cookie.txt', 'r') as f:
             self.cookie = f.read()
         if self.cookie == '':
             raise Exception('cookie is empty')
         
     def readUUID(self, file_path:str) -> None:
-        with open(file_path, 'r') as f:
-            self.uuid = f.read()
-        if self.uuid == '':
+        with open(file_path + 'claude-ai-title_fixer.txt', 'r') as f:
+            self.uuid_title = f.read()
+        with open(file_path + 'claude-ai-conclusion.txt', 'r') as f:          
+            self.uuid_conclusion = f.read()
+
+        if self.uuid_title == '' or self.uuid_conclusion == '': 
             raise Exception('uuid is empty')
 
-    def getAnswer(self, prompt: str) -> str:
-        return self.client.send_message(prompt, self.uuid)
+    def getAnswer(self, prompt: str,uuid) -> str:
+        return self.client.send_message(prompt, uuid)
     
     def getORGNameByPrompt(self, prompt: str) -> str:
-        response = self.getAnswer(prompt)
-        return response
+        return self.getAnswer(prompt,self.uuid_title)
+
+    def getDepartmentsByPrompt(self, prompt: str) -> str:
+        return self.getAnswer(prompt,self.uuid_conclusion)
 
 class MyTitleFixerLLMAPI(MyLLMAPI):
     def __init__(self,cookie_path,uuid_path):
@@ -72,5 +79,5 @@ class MyTitleFixerLLMAPI(MyLLMAPI):
 
 
 if __name__ == '__main__':
-    api = MyLLMAPI('./api-assets/claude-ai-cookie.txt','./api-assets/claude-ai-uuid.txt')
+    api = MyLLMAPI('./api-assets/')
     # print(api.getORGNameByPrompt('嗨! 我會給你一段文字，請你幫我判斷是哪個公司在招人，回答形式請回傳 \"公司名稱:\" 不要廢話\n 【轉知】德州儀器首場女性專場徵才說明會報名開跑！'))

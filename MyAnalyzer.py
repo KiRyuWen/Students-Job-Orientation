@@ -1,4 +1,4 @@
-from MyDatabase import getRawDataFromDatabase, getHeaderDateFromDatabase
+from MyDatabase import getRawDataFromDatabase, getHeaderDateFromDatabase, MyDatabase
 from MyUtils import sortDataByDate
 from MyDepartmentSystem import MyDepartmentSystem
 
@@ -39,7 +39,7 @@ class Analyzer051:
         self.pos = POS("./data")
         self.ner = NER("./data")
         self.department_system = MyDepartmentSystem()
-        self.llmapi = MyLLMAPI.MyLLMAPI('./api-assets/claude-ai-cookie.txt','./api-assets/claude-ai-uuid.txt')
+        self.llmapi = MyLLMAPI.MyLLMAPI('./api-assets/')
     def __del__(self):
         del self.ws
         del self.pos
@@ -265,7 +265,7 @@ def fixTitle(raw_title):
     pass
 
  
-def getAllDataDepartments(Analyzer:Analyzer051,ds,ks):
+def getTFIDFByDepartmentAndKeyWord(Analyzer:Analyzer051,ds,ks):
 
     department_dict_count = {}
     keyword_dict_count = {}
@@ -297,6 +297,7 @@ def getAllDataDepartments(Analyzer:Analyzer051,ds,ks):
     department_OD = OrderedDict(sorted(department_dict_count.items(), key=lambda x: x[1], reverse=True))# from big to small
     showWordCloud(keyword_OD)
     showWordCloud(department_OD)
+    return department_OD,keyword_OD
 
     
 
@@ -328,7 +329,7 @@ def backendDataflow():
     
 
    
-
+    #make sure new data
     new_data = []
     for data in raw_data:
         data_date = datetime.strptime(data[0],"%Y-%m-%d").date()
@@ -342,15 +343,15 @@ def backendDataflow():
     print(new_data)
 
     
-        
+    newest_date = last_time_database_update
     
-    if False:
+    if True:
 
 
 
         #after title analysis
-        all_title = [data[1] for data in raw_data ] #get all title
-        all_url = [data[2] for data in raw_data ] #get all url
+        all_title = [data[1] for data in new_data ] #get all title
+        all_url = [data[2] for data in new_data ] #get all url
 
 
 
@@ -359,16 +360,67 @@ def backendDataflow():
         Analyzer = Analyzer051()
 
         #fix title
-        # titles = Analyzer.getOrgNamesByTitles(all_title)
+        titles = Analyzer.getOrgNamesByTitles(all_title)
+        
+        #unique test
+        #get data from unique database
+        #compare org with date
+        my_database = MyDatabase()
+        actual_new_data_title = []
+        actual_new_data_url = []
+        for title in titles:
+            unique_datas = my_database.getDataFromDatabase(database_name="organizations",rule="org = %s",additional_data=(title))
+            if len(unique_datas) == 0:
+                title_index = titles.index(title)
+                actual_new_data_title.append(all_title[title_index])
+                actual_new_data_url.append(all_url[title_index])
+            else:
+                unique_datas = sorted(unique_datas, key=lambda x: x[0])
+                newest_data = unique_datas[0]
+                newest_date = datetime.strptime(newest_data[0],"%Y-%m-%d").date()
+
+                if newest_date > newest_date:
+                    title_index = titles.index(title)
+                    actual_new_data_title.append(all_title[title_index])
+                    actual_new_data_url.append(all_url[title_index])
+        
+
+
+
+        
+        #(date,org,department)
+        #depend on (date,org) within 2 month or not
+        #to find out data is new
+        #ex. yahoo earliest data i s Jan, 2022
+        #ex. yahoo is hiring at Feb, 2022 => not new
+        #ex. yahoo is hiring at Apr, 2022 => new
+        
 
         # prepare content
         contents = []
-        for i in range(len(all_url)):     
-            content = getNTUSTUrlContent(all_url[i])
+        for i in range(len(actual_new_data_title)):     
+            content = getNTUSTUrlContent(actual_new_data_url[i])
             contents.append(content)
         #get departments and keywords
-        ds,ks =Analyzer.inferDepartmentsFromContent(contents)
-        getAllDataDepartments(Analyzer,ds,ks)
+        ds,ks = Analyzer.inferDepartmentsFromContent(contents)
+        ds_dict, ks_dict = getTFIDFByDepartmentAndKeyWord(Analyzer,ds,ks)
+        #save to database
+
+        insert_data = []
+
+        for i in range(len(actual_new_data_title)):
+            d_str = ds[i]
+
+            if d_str == 'Unknown':
+                d_str = MyDepartmentSystem().department_list[-1]
+            else:
+                d_all_number = d_str.split(",")
+                d_str_list = [MyDepartmentSystem().department_list[int(d_num)] for d_num in d_all_number]
+                d_str = ",".join(d_str_list)
+            insert_data.append((newest_date,actual_new_data_title[i],d_str))
+
+        #insert to unique database
+        my_database.insertToDatabase(insert_data,database=my_database.ORGANIZATION_DATABASE_STR,commit=True,close=True)
 
 
     

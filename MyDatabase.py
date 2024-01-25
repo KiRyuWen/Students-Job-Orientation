@@ -21,18 +21,22 @@ class MyDatabase:
         self.conn_rule[10] = str
         self.conn_rule[246] = float
 
-        self.info_database_str = "info(date,title,link,tag,school)"
-        self.date_time_database_str = "date_time(date)"
-        self.organization_database_str = "organization(date,org,departments)"
-
+        self.INFO_DATABASE_STR = "info(date,title,link,tag,school)"
+        self.DATE_TIME_DATABASE_STR = "date_time(date)"
+        self.ORGANIZATION_DATABASE_STR = "organizations(date,org,departments)"
 
     def insertToDatabase(self, datas, commit=True, close=True,bool_executemany = True ,database = "info(date,title,link,tag,school)"):
         try:
             conn = pymysql.connect(**self.database_settings)
 
-            with conn.cursor() as cursor:
-                sql = "INSERT INTO " + database + " VALUES (%s,%s,%s,%s,%s)"#command
+            comma_count = database.count(',')
+            values_str = " VALUES ("
+            for i in range(comma_count):
+                values_str += "%s,"
+            values_str+="%s)"
 
+            with conn.cursor() as cursor:
+                sql = "INSERT INTO " + database + values_str#command
                 try:
                     if bool_executemany:
                         cursor.executemany(sql, datas)#insert
@@ -52,6 +56,23 @@ class MyDatabase:
                         conn.close()
         except Exception as ex:
             print(ex)
+    def getDataFromDatabase(self,database_name:str,rule = "",additional_data:tuple = ()):
+        try:
+            conn = pymysql.connect(**self.database_settings,conv = self.conn_rule)
+
+            with conn.cursor() as cursor:
+                sql = "SELECT * FROM " + database_name
+                if rule != "":
+                    sql += " WHERE " + rule
+                    cursor.execute(sql,additional_data)
+                else:
+                    cursor.execute(sql)
+                result = cursor.fetchall()
+            conn.close()
+            return result
+        except Exception as ex:
+            print(ex)
+    
 
 # database setting
 with open("./password.txt") as f:
@@ -166,7 +187,7 @@ def deleteDataFromSpecificDatabase(database_name):
     try:
         conn = pymysql.connect(**db_settings)
         with conn.cursor() as cursor:
-            sql = "DELETE FROM " + database_name
+            sql = "DELETE FROM "+ database_name
             cursor.execute(sql)
             conn.commit()
         conn.close()
@@ -188,3 +209,38 @@ def getHeaderDateFromDatabase():
     except Exception as ex:
         pass
     return None
+
+from MyDepartmentSystem import MyDepartmentSystem
+if __name__ == '__main__':
+    # my_database = MyDatabase()
+    # my_database.insertToDatabase([
+    #     ("2022-01-01","yahoo","資訊工程系,電機工程系"),
+    #     ("2022-04-01","yahoo","資訊工程系,電機工程系"),
+    #     ("2022-01-01","google","資訊工程系,電機工程系"),
+    #     ("2022-01-01","amazon","資訊工程系,電機工程系"),
+    #     ("2022-01-01","netflix","資訊工程系,電機工程系"),
+    #     ("2022-01-01","meta","資訊工程系,電機工程系")
+    # ],database=my_database.ORGANIZATION_DATABASE_STR
+    # )
+    # newest_date = "2022-03-01"
+    # orgs = ["a","b","c","d","e","f"]
+    # deps = ["1,2,3","0,1,2","9","4,5,6,7","8","Unknown"]
+
+    # final_result = []
+    # for i in range(len(orgs)):
+    #     d_str = deps[i]
+
+    #     if d_str == 'Unknown':
+    #         d_str = MyDepartmentSystem().department_list[-1]
+    #     else:
+    #         d_all_number = d_str.split(",")
+    #         d_str_list = [MyDepartmentSystem().department_list[int(d_num)] for d_num in d_all_number]
+    #         d_str = ",".join(d_str_list)
+
+    #     final_result.append((newest_date,orgs[i],d_str))
+    # print(final_result)
+        
+    # input()
+    # my_database.insertToDatabase(final_result,database=my_database.ORGANIZATION_DATABASE_STR,commit=True,close=True)
+    # data_yahoo = my_database.getDataFromDatabase(database_name="organizations",rule = "org = %s",additional_data=("yahoo"))
+    # print(data_yahoo)
