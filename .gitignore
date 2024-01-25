@@ -1,2 +1,4 @@
 password.txt
 /__pycache__
+/data
+/api-assets
