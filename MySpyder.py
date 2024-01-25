@@ -166,3 +166,17 @@ def myScrapperNTUSTGetAllData():
     All_intern = list(set(All_intern))
     Insert_2_database_from_scrapper(All_intern)
 
+
+import datetime
+import time
+if __name__ == '__main__':
+    
+    target_date = datetime.datetime(2024,1,25,18,35,0)
+   
+    while True:
+        current_time = datetime.datetime.now()
+        if current_time >= target_date:
+            target_date = target_date + datetime.timedelta(days=1)
+        else:
+            delta_time = target_date - current_time
+            time.sleep(delta_time.total_seconds())

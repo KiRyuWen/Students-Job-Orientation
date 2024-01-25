@@ -5,7 +5,7 @@ import json
 
 app = Flask(__name__, static_folder='assets')
 #predefined
-data_from_database = MyDatabase.getDataFromDatabase()
+data_from_database = MyDatabase.getRawDataFromDatabase()
 data_from_database = MyUtils.sortDataByDate(data_from_database)
 
 @app.route('/', methods=['GET'])

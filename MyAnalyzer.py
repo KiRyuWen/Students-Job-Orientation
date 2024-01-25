@@ -1,4 +1,4 @@
-from MyDatabase import getDataFromDatabase
+from MyDatabase import getRawDataFromDatabase, getHeaderDateFromDatabase
 from MyUtils import sortDataByDate
 from MyDepartmentSystem import MyDepartmentSystem
 
@@ -7,7 +7,7 @@ import requests
 from html.parser import HTMLParser
 from ckiptagger import data_utils, construct_dictionary, WS, POS, NER #ckiptagger
 import math
-
+from datetime import datetime,timedelta
 
 from collections import OrderedDict
 
@@ -106,26 +106,27 @@ class Analyzer051:
                 self.llmapi.getAnswer(prompt_start + "\n" + prompt_departments + "\n" + prompt_keywords + "\n" + prompt_failed + "\n")
 
             prompt = ""
-            print("-------------------")
+
             if BOOL_SEND_API:
                 for content in contents:
                     prompt = prompt_content_constraint + content
-                    print(prompt)
+
                     result = self.llmapi.getAnswer(prompt)
                     if result.find("c)") != -1:
                         departments_list.append('Unknown')
                         keywords.append('Unknown')
-                        print('unknown')
+
                     else:
-                        print("success")
+
                         index_b = result.find("b)")
                         result_str_a = (result[:index_b])[2:]
                         result_str_b = (result[index_b:])[2:].split("\n")
 
                         result_str_b = [x for x in result_str_b if x != ' ' and x != '']
 
-                        print(result_str_a)
-                        print(result_str_b)
+                        departments_list.append(result_str_a)
+                        keywords.append(result_str_b)
+
                     
 
         return departments_list,keywords
@@ -240,11 +241,10 @@ def getNTUSTUrlContent(url):
 #step 3 TF-IDF preprocess
 def push2FrequencyTable(content,target_dict):
     for word in content:
-        if len(word) > 1:
-            if target_dict.get(word) == None:
-                target_dict[word] = 0
-        
-            target_dict[word] += 1
+        if target_dict.get(word) == None:
+            target_dict[word] = 0
+    
+        target_dict[word] += 1
 
 def getORGFromContent(content):
     return [word for word in content if word[2] == 'ORG']
@@ -265,6 +265,38 @@ def fixTitle(raw_title):
     pass
 
  
+def getAllDataDepartments(Analyzer:Analyzer051,ds,ks):
+
+    department_dict_count = {}
+    keyword_dict_count = {}
+
+    for department in Analyzer.department_system.department_list:
+        department_dict_count[department] = 0
+    
+    for departments in ds:
+        for department in departments:
+            dep_str = Analyzer.department_system.department_list[department]
+            department_dict_count[dep_str] += 1
+
+    #get all info
+    #tf idf
+    for keywords in ks:
+        for keyword in keywords:
+            if keyword_dict_count.get(keyword) == None:
+                keyword_dict_count[keyword] = 0
+            keyword_dict_count[keyword] += 1
+    
+    for word in keyword_dict_count.keys():
+        keyword_dict_count[word] = keyword_dict_count[word]/len(ks)
+    
+    for department in department_dict_count.keys():
+        department_dict_count[department] = department_dict_count[department]/len(ds)
+    
+    #make wordcloud
+    keyword_OD = OrderedDict(sorted(keyword_dict_count.items(), key=lambda x: x[1], reverse=True))# from big to small
+    department_OD = OrderedDict(sorted(department_dict_count.items(), key=lambda x: x[1], reverse=True))# from big to small
+    showWordCloud(keyword_OD)
+    showWordCloud(department_OD)
 
     
 
@@ -277,80 +309,67 @@ def fixTitle(raw_title):
 #step 2.4 frequency table
 #step 2.5 TF-IDF
 TOP_K = 500
-TEST_DATA_LEN = 3
-def getAllDataOrgName():
-
+TEST_DATA_LEN = 10
+def backendDataflow():
+    # assume spyder get data at midnight and school always updated before midnight at same day.
+    # impossible 2/14 update a 2/13 data and 2/13 data etc
     
-    raw_data = sortDataByDate(getDataFromDatabase()[:TEST_DATA_LEN])
+    raw_data = sortDataByDate(getRawDataFromDatabase())[0:TEST_DATA_LEN] # get data
+    header_date = getHeaderDateFromDatabase()
+    last_two_time_database_update = (datetime.today() - timedelta(days=1)).date()
+    last_time_database_update = datetime.today().date()
 
-    all_title = [data[1] for data in raw_data ] #get all title
-    all_url = [data[2] for data in raw_data ] #get all url
-
-    tmp_word_dict = {}
-    word_dict = {}
-    org_url_dict = {}
-    org_name_list = []
-
-    Analyzer = Analyzer051()
-    # titles = Analyzer.getOrgNamesByTitles(all_title)
-    contents = []
-    for i in range(len(all_url)):     
-        content = getNTUSTUrlContent(all_url[i])
-        contents.append(content)
-
-    Analyzer.inferDepartmentsFromContent(contents)
-
+    if len(header_date)>0:
+        last_time_database_update = header_date[0][0]
+        if len(header_date)>1:
+            last_two_time_database_update = header_date[1][0]
+            last_two_time_database_update = datetime.strptime(last_two_time_database_update,"%Y-%m-%d").date()
+        last_time_database_update = datetime.strptime(last_time_database_update, "%Y-%m-%d").date()
     
 
-    #loop all url
-    # for i in range(len(all_url)):
-    #     html_parser.close() #reset
-    #     html_parser.reset()
-    #     content = getUrlContent(all_url[i])
-    #     word_list = getWordSentenceList(content)
+   
 
-    #     _, entity_list_title = getTokenization(all_title[i])#analyze title
-    #     org_list = getORGFromContent(entity_list_title)
-    #     if org_list != [] and org_url_dict.get(org_list[0]) == None:
-    #         # org_url_dict[org_list[0]] = ''
-    #         org_url_dict[all_url[i]] = org_list[0]
-    #         org_name_list.append(org_list[0])
-    #     elif org_list == []:
-    #         org_url_dict[all_url[i]] = 'None'
-    #         org_name_list.append('None')
-    #     #org_list
-    #     push2FrequencyTable(word_list,tmp_word_dict) #preprocess
-    #     print(content)
+    new_data = []
+    for data in raw_data:
+        data_date = datetime.strptime(data[0],"%Y-%m-%d").date()
+
+        if data_date > last_two_time_database_update:
+            new_data.append(data)
     
-    # #TF-IDF
-    # for word, frequency in tmp_word_dict.items():
-    #     if frequency < 2:
-    #         pass
-    #     else:
-    #         word_dict[word] = math.log10(1/(len(all_url)/frequency)) #frequency
-    # word_dict_sort_top_k = OrderedDict(sorted(word_dict.items(), key=lambda t: t[1], reverse = True)[:TOP_K]) # inverse importance frequency higher the value is less important
-    # #print(word_dict_sort_top_k)
+    if new_data == []:
+        return
+    
+    print(new_data)
 
-    # #word cloud
-    # showWordCloud(word_dict_sort_top_k)
-
-    # MyTitleFixer = MyLLMAPI.MyTitleFixerLLMAPI('./api-assets/claude-ai-cookie.txt','./api-assets/claude-ai-uuid.txt')
-    # MyTitleFixer.fixListIfNoneTitle(org_name_list,all_title) # fix org name
-
-    # i = 0
-    # for url in org_url_dict.keys():
-    #     if type(org_name_list[i]) is tuple:
-    #         org_name_list[i] = org_name_list[i][3]
+    
         
-
-    #     org_url_dict[url] = org_name_list[i]
-    #     i+=1
     
-    # i = 0
-    # print('---------------------------')
-    # for url, org in org_url_dict.items():
-    #     print(f"{org}:\t{url}\t{all_title[i]}")
-    #     i+=1
+    if False:
+
+
+
+        #after title analysis
+        all_title = [data[1] for data in raw_data ] #get all title
+        all_url = [data[2] for data in raw_data ] #get all url
+
+
+
+
+        # get llm helper
+        Analyzer = Analyzer051()
+
+        #fix title
+        # titles = Analyzer.getOrgNamesByTitles(all_title)
+
+        # prepare content
+        contents = []
+        for i in range(len(all_url)):     
+            content = getNTUSTUrlContent(all_url[i])
+            contents.append(content)
+        #get departments and keywords
+        ds,ks =Analyzer.inferDepartmentsFromContent(contents)
+        getAllDataDepartments(Analyzer,ds,ks)
+
 
     
 
@@ -364,4 +383,4 @@ if __name__ == '__main__':
     html_parser = HTMLCleaner()
 
 
-    getAllDataOrgName()
+    backendDataflow()

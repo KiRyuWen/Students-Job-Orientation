@@ -24,5 +24,9 @@ Javascript/Python => Uppercase camel naming for class.
 Javascript => method/function getMyFunction camel but first letter is lowercase. I adopt for this!
 variable => name_name2_name3
 
+# update and save is different thing
+2/10 header update but maybe didn't insert into database (because the website is delete data)
+database_timestamp records insert date(means the data is not exist in database before)
+assume website will upload all current date data at once.
 # Learned
 動態與靜態的差別;但動態仍然可以request，只要找到對應的URL即可 https://www.learncodewithmike.com/2020/10/scraping-ajax-websites-using-python.html 

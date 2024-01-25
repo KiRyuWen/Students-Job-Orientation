@@ -172,3 +172,19 @@ def deleteDataFromSpecificDatabase(database_name):
         conn.close()
     except Exception as ex:
         print(ex)
+def getHeaderDateFromDatabase():
+    try:
+        conv = pymysql.converters.conversions.copy() 
+        conv[246] = float
+        conv[10] = str
+
+        conn = pymysql.connect(**db_settings,conv = conv)
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM date_time"
+            cursor.execute(sql)
+            result = cursor.fetchall()
+        conn.close()
+        return result
+    except Exception as ex:
+        pass
+    return None
