@@ -43,6 +43,7 @@ class MyDatabase:
                     else:
                         for data in datas:
                             cursor.execute(sql, data)
+                            conn.commit()
                     #finish
                     if commit:
                         conn.commit()#save
@@ -69,7 +70,8 @@ class MyDatabase:
                     cursor.execute(sql)
                 result = cursor.fetchall()
             conn.close()
-            return result
+            print(type(result))
+            return list(result)
         except Exception as ex:
             print(ex)
     
@@ -212,7 +214,9 @@ def getHeaderDateFromDatabase():
 
 from MyDepartmentSystem import MyDepartmentSystem
 if __name__ == '__main__':
-    # my_database = MyDatabase()
+    my_database = MyDatabase()
+    # deleteDataFromSpecificDatabase("organizations")
+    # my_database
     # my_database.insertToDatabase([
     #     ("2022-01-01","yahoo","資訊工程系,電機工程系"),
     #     ("2022-04-01","yahoo","資訊工程系,電機工程系"),
@@ -242,5 +246,6 @@ if __name__ == '__main__':
         
     # input()
     # my_database.insertToDatabase(final_result,database=my_database.ORGANIZATION_DATABASE_STR,commit=True,close=True)
-    # data_yahoo = my_database.getDataFromDatabase(database_name="organizations",rule = "org = %s",additional_data=("yahoo"))
-    # print(data_yahoo)
+    
+    data_yahoo = my_database.getDataFromDatabase(database_name="organizations",rule = "date > %s",additional_data=("2022-01-01 00:00:00",))
+    print(data_yahoo)

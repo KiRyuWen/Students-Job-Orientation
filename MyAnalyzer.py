@@ -315,7 +315,7 @@ def backendDataflow():
     # assume spyder get data at midnight and school always updated before midnight at same day.
     # impossible 2/14 update a 2/13 data and 2/13 data etc
     
-    raw_data = sortDataByDate(getRawDataFromDatabase())[0:TEST_DATA_LEN] # get data
+    # raw_data = sortDataByDate(getRawDataFromDatabase())[0:TEST_DATA_LEN] # get data
     header_date = getHeaderDateFromDatabase()
     last_two_time_database_update = (datetime.today() - timedelta(days=1)).date()
     last_time_database_update = datetime.today().date()
@@ -327,15 +327,10 @@ def backendDataflow():
             last_two_time_database_update = datetime.strptime(last_two_time_database_update,"%Y-%m-%d").date()
         last_time_database_update = datetime.strptime(last_time_database_update, "%Y-%m-%d").date()
     
-
-   
-    #make sure new data
-    new_data = []
-    for data in raw_data:
-        data_date = datetime.strptime(data[0],"%Y-%m-%d").date()
-
-        if data_date > last_two_time_database_update:
-            new_data.append(data)
+    my_database = MyDatabase()
+    new_data = my_database.getDataFromDatabase(database_name="info",rule="date > %s",additional_data=(last_two_time_database_update.strftime("%Y-%m-%d")))
+    
+    
     
     if new_data == []:
         return
@@ -365,24 +360,27 @@ def backendDataflow():
         #unique test
         #get data from unique database
         #compare org with date
-        my_database = MyDatabase()
         actual_new_data_title = []
         actual_new_data_url = []
+        a_month_ago = (datetime.strptime(newest_date,"%Y-%m-%d").date() - timedelta(days=30)).strftime("%Y-%m-%d")
         for title in titles:
-            unique_datas = my_database.getDataFromDatabase(database_name="organizations",rule="org = %s",additional_data=(title))
+            # find the title and check the date a month ago is exist or not
+            # if not, add it
+            # if exists, don't
+            unique_datas = my_database.getDataFromDatabase(database_name="organizations",rule="org = %s AND date > %s",additional_data=(title,a_month_ago)) 
             if len(unique_datas) == 0:
                 title_index = titles.index(title)
                 actual_new_data_title.append(all_title[title_index])
                 actual_new_data_url.append(all_url[title_index])
-            else:
-                unique_datas = sorted(unique_datas, key=lambda x: x[0])
-                newest_data = unique_datas[0]
-                newest_date = datetime.strptime(newest_data[0],"%Y-%m-%d").date()
+            # else:
+            #     unique_datas = sorted(unique_datas, key=lambda x: x[0], reverse=True)
+            #     newest_data = unique_datas[0]
+            #     last_date_date = datetime.strptime(newest_data[0],"%Y-%m-%d").date()
 
-                if newest_date > newest_date:
-                    title_index = titles.index(title)
-                    actual_new_data_title.append(all_title[title_index])
-                    actual_new_data_url.append(all_url[title_index])
+            #     if newest_date > last_date_date:
+            #         title_index = titles.index(title)
+            #         actual_new_data_title.append(all_title[title_index])
+            #         actual_new_data_url.append(all_url[title_index])
         
 
 

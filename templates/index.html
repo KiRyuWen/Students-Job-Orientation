@@ -37,6 +37,10 @@
             <button id="btn_search"  onclick="onSearchTitle()">search</button>
         </div>
     </div>
+    <form action="page" method="get">
+        <input id = "page" type="number" name="page"  placeholder="page">
+        <button id="btn_page" type="submit">page</button>
+    </form>
 </body>
 
     <script src="{{ url_for('static', filename='main.js') }}"></script>
