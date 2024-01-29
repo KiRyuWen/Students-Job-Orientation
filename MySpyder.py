@@ -272,10 +272,179 @@ def myScrapperNTHUGetAllData():
     my_database.insertToDatabase(All_Intern_hiring_list)
     driver.close()
 
+from math import ceil
+from selenium.webdriver.common.action_chains import ActionChains
 def myScrapperNCTUGetAllData():
-    pass
+    #request is too slow!!!!! takes at lease 1 sec by website
+    All_intern_hiring_list = []
+
+
+
+    # loop all pages to get all intern info
+    # 1. get first page
+    # 2. get all elements
+    # 3. go to next page if has
+    # 4. do until all pages is done => find element is disabled
+    target_url = 'https://osa.nycu.edu.tw/osa/ch/app/data/list?module=nycu0106&id=3604'
+
+   
+    
+    #open firefox
+    driver = webdriver.Firefox()
+
+    #to target url
+    driver.get(target_url)
+    #wait until element loaded
+    WebDriverWait(driver,20).until(E_C.visibility_of_element_located((By.XPATH,"/html/body/div[2]/div/form/div/div[2]")))
+
+    school_text = "NCTU"
+    number_of_page = driver.find_element(By.CLASS_NAME,"text-danger").get_attribute("innerText")
+    number_of_page = ceil(int(number_of_page)/15.0)
+    now_page = 0
+    while now_page < number_of_page:
+        ul_content = driver.find_element(By.XPATH,"/html/body/div[2]/div/form/div/div[2]/ul")
+        lis = ul_content.find_elements(By.TAG_NAME,"li")
+        for li in lis:
+            try:
+                link_text = li.find_element(By.TAG_NAME,"a").get_attribute("href")
+                paragraphs = li.find_elements(By.TAG_NAME,"p")
+
+                date_text = paragraphs[0].get_attribute("innerText")
+                date_text = date_text[date_text.find("：")+1:]
+                date_texts = date_text.split("-")
+                date_text = str(int(date_texts[0])+1911) + "-" +date_texts[1]+"-"+date_texts[2]
+
+                title_text = paragraphs[2].get_attribute("innerText")
+                title_text = title_text.replace("\n","").replace("\t","").replace("\r","").replace(" ","").replace(u"\u5553","").replace(u"\u7881","").replace(u"\u5cef","")
+                title_text = title_text.encode('big5','ignore').decode('big5','ignore')
+                tag_text = "徵才"
+
+                if "實習" in title_text or "intern" in title_text.lower() or "工讀" in title_text:
+                    tag_text = "實習"
+                All_intern_hiring_list.append((date_text,title_text,link_text,tag_text,school_text))
+            except Exception as e:
+                continue
+        # WebDriverWait(driver,30).until(E_C.element_to_be_clickable((By.XPATH,"/html/body/div[2]/div/form/div/div[3]/div/ul/li[3]"))).click()
+            
+        element = driver.find_element(By.XPATH ,"/html/body/div[2]/div/form/div/div[3]/div/ul/li[3]")
+        driver.execute_script("arguments[0].scrollIntoView(false)", element)
+        time.sleep(1)
+        element.click()
+        # driver.find_element(By.XPATH,"/html/body/div[2]/div/form/div/div[3]/div/ul/li[3]").click()
+        time.sleep(1)#sleep at at least 1 sec
+        now_page = now_page + 1
+    All_intern_hiring_list = list(set(All_intern_hiring_list))
+    All_intern_hiring_list = sorted(All_intern_hiring_list,key=lambda x: x[0], reverse=True)
+    my_database = MyDatabase()
+    my_database.insertToDatabase(All_intern_hiring_list)
+
+    driver.close()
+        
+    
 def myScrapperNCKUGetAllData():
-    pass
+    All_intern_hiring_list = []
+    current_time = datetime.date.today()#date
+    #seriously lack date info
+    target_url = "https://grad-osa.ncku.edu.tw/p/403-1054-96-1.php?Lang=zh-tw"
+    web_response = requests.get(target_url)
+    soup = BeautifulSoup(web_response.text, 'html.parser')
+    items = soup.find_all("div",class_ ="listBS")
+    school_text = "NCKU"
+    last_year = "2024"
+    #finish first page
+    for item in items:
+        inner_text = item.find('a').text
+        tag_text = ""
+        link_text = item.find('a').get('href')
+        date_text = ""
+
+        if inner_text.find("企業徵才") != -1:
+            tag_text = "徵才"
+        elif inner_text.find("職場體驗") != -1:
+            tag_text = "實習"
+        else:
+            continue # ignore
+        
+        #date time filler
+        if inner_text.find("2023") != -1 or inner_text.find("112") != -1:
+            date_text = "2023"
+        elif inner_text.find("2024") != -1 or inner_text.find("113") != -1:
+            date_text = "2024"
+        elif inner_text.find("2025") != -1 or inner_text.find("114") != -1:
+            raise ValueError("The system need to modify in ncku")
+        else:
+            date_text = last_year
+        last_year = date_text#update last year
+        
+        
+        if inner_text.find("暑") !=-1: #lack of date info we fill it
+            date_text = date_text + "-01-01"
+        else:
+            date_text = date_text + "-11-01"
+
+        date_type = datetime.datetime.strptime(date_text,"%Y-%m-%d").date()
+        if date_type>current_time:
+            date_text = datetime.datetime.strftime(current_time,"%Y-%m-%d")
+
+        title_text = inner_text.replace("\n", '').replace("\t", '').replace("\r", '').replace(u"\xa0", "")
+        title_text = title_text.encode('big5','ignore').decode('big5','ignore')
+        All_intern_hiring_list.append((date_text,title_text,link_text,tag_text,school_text))
+    #second pages need to post method
+    num = 2
+    while True:
+        data = {"Rcg":96,"Op":"getpartlist","Page":num}
+        web_response = requests.post("https://grad-osa.ncku.edu.tw/app/index.php?Action=mobilercglist",data=data)
+        web_response = web_response.json()
+        if web_response["stat"] == "over":
+            break
+        html_content = web_response["content"]
+        soup = BeautifulSoup(html_content, 'html.parser')
+
+        items = soup.find_all("div",class_ ="listBS")
+
+        for item in items:
+            inner_text = item.find('a').text
+            tag_text = ""
+            link_text = item.find('a').get('href')
+            date_text = ""
+
+            if inner_text.find("企業徵才") != -1:
+                tag_text = "徵才"
+            elif inner_text.find("職場體驗") != -1:
+                tag_text = "實習"
+            else:
+                continue # ignore
+            
+            #date time filler
+            if inner_text.find("2023") != -1 or inner_text.find("112") != -1:
+                date_text = "2023"
+            elif inner_text.find("2024") != -1 or inner_text.find("113") != -1:
+                date_text = "2024"
+            elif inner_text.find("2025") != -1 or inner_text.find("114") != -1:
+                raise ValueError("The system need to modify in ncku")
+            else:
+                date_text = last_year
+            last_year = date_text#update last year
+            
+            
+            if inner_text.find("暑") !=-1: #lack of date info we fill it
+                date_text = date_text + "-01-01"
+            else:
+                date_text = date_text + "-11-01"
+
+            date_type = datetime.datetime.strptime(date_text,"%Y-%m-%d").date()
+            if date_type>current_time:
+                date_text = datetime.datetime.strftime(current_time,"%Y-%m-%d")
+
+            title_text = inner_text.replace("\n", '').replace("\t", '').replace("\r", '').replace(u"\xa0", "")
+            title_text = title_text.encode('big5','ignore').decode('big5','ignore')
+            All_intern_hiring_list.append((date_text,title_text,link_text,tag_text,school_text))
+        num+=1
+    All_intern_hiring_list = list(set(All_intern_hiring_list))
+    All_intern_hiring_list = sorted(All_intern_hiring_list, key=lambda x: x[0],reverse=True)
+    my_database = MyDatabase()
+    my_database.insertToDatabase(All_intern_hiring_list)
+    # print(All_intern_hiring_list)
 
 
 import datetime
@@ -288,8 +457,11 @@ if __name__ == '__main__':
     # myScrapperNTUSTGetAllData()
     # myScrapperNTUGetAllData()
     # myScrapperNTHUGetAllData()
-
-
+    # myScrapperNCTUGetAllData()
+    # test_str = "\n\t\t\t\t\n\t\t\t\t【職場體驗】文化部文化資產局1916工坊「112學年第2學期以工換技實習徵選報名簡章」\n\t\t\t"
+    # print(test_str.replace("\n", '').replace("\t", '').replace("\r", '').replace(u"\xa0", ""))
+    myScrapperNCKUGetAllData()
+    # print("HELLO")
     #do it every day
     #url
     #1. ntust
