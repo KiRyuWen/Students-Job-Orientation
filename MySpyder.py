@@ -267,7 +267,6 @@ def myScrapperNTHUGetAllData():
 
     All_Intern_hiring_list = list(set(All_Intern_hiring_list))
     All_Intern_hiring_list = sorted(All_Intern_hiring_list,key=lambda x: x[0], reverse=True)
-    print(All_Intern_hiring_list)
     my_database = MyDatabase()
     my_database.insertToDatabase(All_Intern_hiring_list)
     driver.close()
@@ -332,11 +331,12 @@ def myScrapperNCTUGetAllData():
         element.click()
         # driver.find_element(By.XPATH,"/html/body/div[2]/div/form/div/div[3]/div/ul/li[3]").click()
         time.sleep(1)#sleep at at least 1 sec
+        # print(All_intern_hiring_list)   
         now_page = now_page + 1
     All_intern_hiring_list = list(set(All_intern_hiring_list))
     All_intern_hiring_list = sorted(All_intern_hiring_list,key=lambda x: x[0], reverse=True)
     my_database = MyDatabase()
-    my_database.insertToDatabase(All_intern_hiring_list)
+    my_database.insertToDatabase(All_intern_hiring_list,bool_executemany=False)
 
     driver.close()
         
@@ -457,10 +457,10 @@ if __name__ == '__main__':
     # myScrapperNTUSTGetAllData()
     # myScrapperNTUGetAllData()
     # myScrapperNTHUGetAllData()
-    # myScrapperNCTUGetAllData()
+    myScrapperNCTUGetAllData()
     # test_str = "\n\t\t\t\t\n\t\t\t\t【職場體驗】文化部文化資產局1916工坊「112學年第2學期以工換技實習徵選報名簡章」\n\t\t\t"
     # print(test_str.replace("\n", '').replace("\t", '').replace("\r", '').replace(u"\xa0", ""))
-    myScrapperNCKUGetAllData()
+    # myScrapperNCKUGetAllData()
     # print("HELLO")
     #do it every day
     #url

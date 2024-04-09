@@ -2,7 +2,7 @@
 import pymysql
 
 
-class MyDatabase:
+class MyDatabase: #WenYi_SQL80
     def __init__(self):
         self.password = None
         self.database_settings = None
@@ -70,7 +70,6 @@ class MyDatabase:
                     cursor.execute(sql)
                 result = cursor.fetchall()
             conn.close()
-            print(type(result))
             return list(result)
         except Exception as ex:
             print(ex)

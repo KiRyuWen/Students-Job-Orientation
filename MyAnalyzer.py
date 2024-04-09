@@ -84,6 +84,10 @@ class Analyzer051:
     def sendStartPrompt(self, prompt_start) -> str:
         return self.llmapi.getAnswer(prompt_start)
     def inferDepartmentsFromContent(self, contents:list,keyword_allow_number = 10) -> list:
+        if contents is None or len(contents) == 0:
+            raise Exception('contents is empty')
+            return []
+
         departments_list = []
         keywords =  []
         prompt_start = "你接下來一系列的任務都是"
@@ -103,7 +107,7 @@ class Analyzer051:
         if True:
 
             if BOOL_SEND_API:
-                self.llmapi.getAnswer(prompt_start + "\n" + prompt_departments + "\n" + prompt_keywords + "\n" + prompt_failed + "\n")
+                self.llmapi.getAnswer(prompt_start + "\n" + prompt_departments + "\n" + prompt_keywords + "\n" + prompt_failed + "\n",'9c64549d-4f71-45eb-a27e-c1887f040dc2')
 
             prompt = ""
 
@@ -143,11 +147,11 @@ class Analyzer051:
             elif len(org_list) == 0:
                 result_orgs.append('None')
 
-        TitleFixer = MyLLMAPI.MyTitleFixerLLMAPI('./api-assets/claude-ai-cookie.txt','./api-assets/claude-ai-uuid.txt')
+        TitleFixer = MyLLMAPI.MyTitleFixerLLMAPI('./api-assets/')
 
         # TitleFixer.sendORGStartPrompt()
         result_orgs = TitleFixer.fixListIfNoneTitle(result_orgs,titles)
-
+        print("After fix: ",result_orgs)
         return result_orgs
 
 
@@ -327,18 +331,21 @@ def backendDataflow():
             last_two_time_database_update = datetime.strptime(last_two_time_database_update,"%Y-%m-%d").date()
         last_time_database_update = datetime.strptime(last_time_database_update, "%Y-%m-%d").date()
     
+    if last_two_time_database_update > last_time_database_update:
+        last_two_time_database_update = last_time_database_update
+
     my_database = MyDatabase()
     new_data = my_database.getDataFromDatabase(database_name="info",rule="date > %s",additional_data=(last_two_time_database_update.strftime("%Y-%m-%d")))
     
-    
+    # print(len(new_data))
     
     if new_data == []:
         return
     
-    print(new_data)
+    # print(new_data)
 
     
-    newest_date = last_time_database_update
+    newest_date = last_time_database_update.strftime("%Y-%m-%d")
     
     if True:
 
@@ -363,6 +370,8 @@ def backendDataflow():
         actual_new_data_title = []
         actual_new_data_url = []
         a_month_ago = (datetime.strptime(newest_date,"%Y-%m-%d").date() - timedelta(days=30)).strftime("%Y-%m-%d")
+        print("processing time:",a_month_ago," after.")
+        print("The title count is:",len(titles))
         for title in titles:
             # find the title and check the date a month ago is exist or not
             # if not, add it
