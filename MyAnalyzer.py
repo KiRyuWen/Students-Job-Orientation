@@ -316,6 +316,8 @@ def getTFIDFByDepartmentAndKeyWord(Analyzer:Analyzer051,ds,ks):
 TOP_K = 500
 TEST_DATA_LEN = 10
 def backendDataflow():
+    #backup backend dataflow
+    
     # assume spyder get data at midnight and school always updated before midnight at same day.
     # impossible 2/14 update a 2/13 data and 2/13 data etc
     
@@ -343,7 +345,6 @@ def backendDataflow():
         return
     
     # print(new_data)
-
     
     newest_date = last_time_database_update.strftime("%Y-%m-%d")
     
