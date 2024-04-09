@@ -319,115 +319,115 @@ def backendDataflow():
     # assume spyder get data at midnight and school always updated before midnight at same day.
     # impossible 2/14 update a 2/13 data and 2/13 data etc
     
-    # raw_data = sortDataByDate(getRawDataFromDatabase())[0:TEST_DATA_LEN] # get data
-    header_date = getHeaderDateFromDatabase()
-    last_two_time_database_update = (datetime.today() - timedelta(days=1)).date()
-    last_time_database_update = datetime.today().date()
+    # # raw_data = sortDataByDate(getRawDataFromDatabase())[0:TEST_DATA_LEN] # get data
+    # header_date = getHeaderDateFromDatabase()
+    # last_two_time_database_update = (datetime.today() - timedelta(days=1)).date()
+    # last_time_database_update = datetime.today().date()
 
-    if len(header_date)>0:
-        last_time_database_update = header_date[0][0]
-        if len(header_date)>1:
-            last_two_time_database_update = header_date[1][0]
-            last_two_time_database_update = datetime.strptime(last_two_time_database_update,"%Y-%m-%d").date()
-        last_time_database_update = datetime.strptime(last_time_database_update, "%Y-%m-%d").date()
+    # if len(header_date)>0:
+    #     last_time_database_update = header_date[0][0]
+    #     if len(header_date)>1:
+    #         last_two_time_database_update = header_date[1][0]
+    #         last_two_time_database_update = datetime.strptime(last_two_time_database_update,"%Y-%m-%d").date()
+    #     last_time_database_update = datetime.strptime(last_time_database_update, "%Y-%m-%d").date()
     
-    if last_two_time_database_update > last_time_database_update:
-        last_two_time_database_update = last_time_database_update
+    # if last_two_time_database_update > last_time_database_update:
+    #     last_two_time_database_update = last_time_database_update
 
-    my_database = MyDatabase()
-    new_data = my_database.getDataFromDatabase(database_name="info",rule="date > %s",additional_data=(last_two_time_database_update.strftime("%Y-%m-%d")))
+    # my_database = MyDatabase()
+    # new_data = my_database.getDataFromDatabase(database_name="info",rule="date > %s",additional_data=(last_two_time_database_update.strftime("%Y-%m-%d")))
     
-    # print(len(new_data))
+    # # print(len(new_data))
     
-    if new_data == []:
-        return
+    # if new_data == []:
+    #     return
     
-    # print(new_data)
+    # # print(new_data)
 
     
-    newest_date = last_time_database_update.strftime("%Y-%m-%d")
+    # newest_date = last_time_database_update.strftime("%Y-%m-%d")
     
-    if True:
+    # if True:
 
 
 
-        #after title analysis
-        all_title = [data[1] for data in new_data ] #get all title
-        all_url = [data[2] for data in new_data ] #get all url
+    #     #after title analysis
+    #     all_title = [data[1] for data in new_data ] #get all title
+    #     all_url = [data[2] for data in new_data ] #get all url
 
 
 
 
-        # get llm helper
-        Analyzer = Analyzer051()
+    #     # get llm helper
+    #     Analyzer = Analyzer051()
 
-        #fix title
-        titles = Analyzer.getOrgNamesByTitles(all_title)
+    #     #fix title
+    #     titles = Analyzer.getOrgNamesByTitles(all_title)
         
-        #unique test
-        #get data from unique database
-        #compare org with date
-        actual_new_data_title = []
-        actual_new_data_url = []
-        a_month_ago = (datetime.strptime(newest_date,"%Y-%m-%d").date() - timedelta(days=30)).strftime("%Y-%m-%d")
-        print("processing time:",a_month_ago," after.")
-        print("The title count is:",len(titles))
-        for title in titles:
-            # find the title and check the date a month ago is exist or not
-            # if not, add it
-            # if exists, don't
-            unique_datas = my_database.getDataFromDatabase(database_name="organizations",rule="org = %s AND date > %s",additional_data=(title,a_month_ago)) 
-            if len(unique_datas) == 0:
-                title_index = titles.index(title)
-                actual_new_data_title.append(all_title[title_index])
-                actual_new_data_url.append(all_url[title_index])
-            # else:
-            #     unique_datas = sorted(unique_datas, key=lambda x: x[0], reverse=True)
-            #     newest_data = unique_datas[0]
-            #     last_date_date = datetime.strptime(newest_data[0],"%Y-%m-%d").date()
+    #     #unique test
+    #     #get data from unique database
+    #     #compare org with date
+    #     actual_new_data_title = []
+    #     actual_new_data_url = []
+    #     a_month_ago = (datetime.strptime(newest_date,"%Y-%m-%d").date() - timedelta(days=30)).strftime("%Y-%m-%d")
+    #     print("processing time:",a_month_ago," after.")
+    #     print("The title count is:",len(titles))
+    #     for title in titles:
+    #         # find the title and check the date a month ago is exist or not
+    #         # if not, add it
+    #         # if exists, don't
+    #         unique_datas = my_database.getDataFromDatabase(database_name="organizations",rule="org = %s AND date > %s",additional_data=(title,a_month_ago)) 
+    #         if len(unique_datas) == 0:
+    #             title_index = titles.index(title)
+    #             actual_new_data_title.append(all_title[title_index])
+    #             actual_new_data_url.append(all_url[title_index])
+    #         # else:
+    #         #     unique_datas = sorted(unique_datas, key=lambda x: x[0], reverse=True)
+    #         #     newest_data = unique_datas[0]
+    #         #     last_date_date = datetime.strptime(newest_data[0],"%Y-%m-%d").date()
 
-            #     if newest_date > last_date_date:
-            #         title_index = titles.index(title)
-            #         actual_new_data_title.append(all_title[title_index])
-            #         actual_new_data_url.append(all_url[title_index])
-        
-
-
-
-        
-        #(date,org,department)
-        #depend on (date,org) within 2 month or not
-        #to find out data is new
-        #ex. yahoo earliest data i s Jan, 2022
-        #ex. yahoo is hiring at Feb, 2022 => not new
-        #ex. yahoo is hiring at Apr, 2022 => new
+    #         #     if newest_date > last_date_date:
+    #         #         title_index = titles.index(title)
+    #         #         actual_new_data_title.append(all_title[title_index])
+    #         #         actual_new_data_url.append(all_url[title_index])
         
 
-        # prepare content
-        contents = []
-        for i in range(len(actual_new_data_title)):     
-            content = getNTUSTUrlContent(actual_new_data_url[i])
-            contents.append(content)
-        #get departments and keywords
-        ds,ks = Analyzer.inferDepartmentsFromContent(contents)
-        ds_dict, ks_dict = getTFIDFByDepartmentAndKeyWord(Analyzer,ds,ks)
-        #save to database
 
-        insert_data = []
 
-        for i in range(len(actual_new_data_title)):
-            d_str = ds[i]
+        
+    #     #(date,org,department)
+    #     #depend on (date,org) within 2 month or not
+    #     #to find out data is new
+    #     #ex. yahoo earliest data i s Jan, 2022
+    #     #ex. yahoo is hiring at Feb, 2022 => not new
+    #     #ex. yahoo is hiring at Apr, 2022 => new
+        
 
-            if d_str == 'Unknown':
-                d_str = MyDepartmentSystem().department_list[-1]
-            else:
-                d_all_number = d_str.split(",")
-                d_str_list = [MyDepartmentSystem().department_list[int(d_num)] for d_num in d_all_number]
-                d_str = ",".join(d_str_list)
-            insert_data.append((newest_date,actual_new_data_title[i],d_str))
+    #     # prepare content
+    #     contents = []
+    #     for i in range(len(actual_new_data_title)):     
+    #         content = getNTUSTUrlContent(actual_new_data_url[i])
+    #         contents.append(content)
+    #     #get departments and keywords
+    #     ds,ks = Analyzer.inferDepartmentsFromContent(contents)
+    #     ds_dict, ks_dict = getTFIDFByDepartmentAndKeyWord(Analyzer,ds,ks)
+    #     #save to database
 
-        #insert to unique database
-        my_database.insertToDatabase(insert_data,database=my_database.ORGANIZATION_DATABASE_STR,commit=True,close=True)
+    #     insert_data = []
+
+    #     for i in range(len(actual_new_data_title)):
+    #         d_str = ds[i]
+
+    #         if d_str == 'Unknown':
+    #             d_str = MyDepartmentSystem().department_list[-1]
+    #         else:
+    #             d_all_number = d_str.split(",")
+    #             d_str_list = [MyDepartmentSystem().department_list[int(d_num)] for d_num in d_all_number]
+    #             d_str = ",".join(d_str_list)
+    #         insert_data.append((newest_date,actual_new_data_title[i],d_str))
+
+    #     #insert to unique database
+    #     my_database.insertToDatabase(insert_data,database=my_database.ORGANIZATION_DATABASE_STR,commit=True,close=True)
 
 
     
