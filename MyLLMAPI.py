@@ -60,14 +60,16 @@ class MyTitleFixerLLMAPI(MyLLMAPI):
         # input("Let's stop for a sec")
 
         if to_change_list != []:
-            segement_company = 15
+            segement_company = 10
             start_index = 0
             for i in range(len(to_change_list)//segement_company):
                 prompt_message = prompt_message_initial + '\n'.join([str(x) for x in prompt_message_split[i*segement_company:(i+1)*segement_company]])
+
                 response_message = self.getORGNameByPrompt(prompt_message)
-                print(response_message)
+                print("response_message: ",response_message)
                 tmp_titles = response_message.split('\n')
                 print(tmp_titles)
+                input("---------------------------------------")
                 result_list_after_fix = []
                 for j in range(len(tmp_titles)):
                     number = tmp_titles[j][0:tmp_titles[j].find('.')]
@@ -93,6 +95,6 @@ class MyTitleFixerLLMAPI(MyLLMAPI):
 if __name__ == '__main__':
     api = MyLLMAPI('./api-assets/')
 
-    result = api.client.send_message("Sorry, I sent to many messages, can you be more polite?",conversation_id="01277297-3cb8-4b61-8cc6-b6e4ef9bfd7d")
-
+    # result = api.client.send_message("你好!，不要廢話",conversation_id="01277297-3cb8-4b61-8cc6-b6e4ef9bfd7d")
+    # print(result)
     # print(api.getORGNameByPrompt('嗨! 我會給你一段文字，請你幫我判斷是哪個公司在招人，回答形式請回傳 \"公司名稱:\" 不要廢話\n 【轉知】德州儀器首場女性專場徵才說明會報名開跑！'))

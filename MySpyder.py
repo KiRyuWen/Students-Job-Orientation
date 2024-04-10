@@ -454,10 +454,10 @@ if __name__ == '__main__':
     
     target_date = datetime.datetime(2024,1,25,18,35,0)
 
-    # myScrapperNTUSTGetAllData()
+    myScrapperNTUSTGetAllData()
     # myScrapperNTUGetAllData()
     # myScrapperNTHUGetAllData()
-    myScrapperNCTUGetAllData()
+    # myScrapperNCTUGetAllData()
     # test_str = "\n\t\t\t\t\n\t\t\t\t【職場體驗】文化部文化資產局1916工坊「112學年第2學期以工換技實習徵選報名簡章」\n\t\t\t"
     # print(test_str.replace("\n", '').replace("\t", '').replace("\r", '').replace(u"\xa0", ""))
     # myScrapperNCKUGetAllData()
